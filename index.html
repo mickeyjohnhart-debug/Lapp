@@ -1,0 +1,18 @@
+async function updateTide() {
+  const res = await fetch("/api/tide"); // serverless function URL
+  const data = await res.json();
+
+  document.getElementById("currentHeight").innerText =
+    `Current Height: ${data.currentHeight} m`;
+  document.getElementById("trend").innerText =
+    `Tide is ${data.trend}`;
+
+  crossingTime = data.crossingTime;
+}
+
+// Countdown logic (every second)
+setInterval(updateCountdown, 1000);
+
+// Refresh tide data every 5 minutes
+updateTide();
+setInterval(updateTide, 5 * 60 * 1000);
