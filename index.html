@@ -1,18 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Guernsey Tide Monitor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Guernsey Tide Monitor</h1>
+
+<div class="medium" id="currentHeight">Loading...</div>
+<div class="medium" id="trend"></div>
+<div class="big" id="countdown"></div>
+
+<script>
+let crossingTime = null;
+
+// Fetch tide data from backend
 async function updateTide() {
-  const res = await fetch("/api/tide"); // serverless function URL
-  const data = await res.json();
+    try {
+        const res = await fetch("/api/tide"); // serverless function URL
+        const data = await res.json();
 
-  document.getElementById("currentHeight").innerText =
-    `Current Height: ${data.currentHeight} m`;
-  document.getElementById("trend").innerText =
-    `Tide is ${data.trend}`;
+        document.getElementById("currentHeight").innerText =
+            `Current Height: ${data.currentHeight} m`;
 
-  crossingTime = data.crossingTime;
+        const trendDiv = document.getElementById("trend");
+        trendDiv.innerText = `Tide is ${data.trend}`;
+        trendDiv.className = data.trend; // applies "rising" or "falling" color
+
+        crossingTime = data.crossingTime;
+    } catch (err) {
+        document.getElementById("currentHeight").innerText = "Error fetching data";
+        console.error(err);
+    }
 }
 
-// Countdown logic (every second)
+// Update countdown every second
+function updateCountdown() {
+    if (!crossingTime) {
+        document.getElementById("countdown").innerText = "Calculating...";
+        return;
+    }
+
+    const now = Date.now();
+    const diff = crossingTime - now;
+
+    if (diff <= 0) {
+        document.getElementById("countdown").innerText = "Crossing happening now";
+        updateTide(); // recalc after crossing
+        return;
+    }
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    document.getElementById("countdown").innerHTML =
+        `${hours}h ${minutes}m ${seconds}s<br>until crossing 5.9m`;
+}
+
+// Initial load
+updateTide();
+
+// Live countdown every second
 setInterval(updateCountdown, 1000);
 
 // Refresh tide data every 5 minutes
-updateTide();
 setInterval(updateTide, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>
