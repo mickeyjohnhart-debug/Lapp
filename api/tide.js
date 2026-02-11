@@ -1,24 +1,34 @@
-// api/tide.js
-import fetch from "node-fetch";
+// api/tide.js (CommonJS for Vercel)
+const fetch = require("node-fetch");
 
 const LAT = 49.455;
 const LON = -2.536;
 const TARGET_HEIGHT = 5.9;
-const API_KEY = process.env.WORLDTIDES_KEY; // secret API key
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
     try {
+        const API_KEY = process.env.WORLDTIDES_KEY;
+
+        if (!API_KEY) {
+            return res.status(500).json({ error: "WorldTides API key is missing" });
+        }
+
         const nowUnix = Math.floor(Date.now() / 1000);
-        const endUnix = nowUnix + 86400; // next 24h
+        const endUnix = nowUnix + 86400; // next 24 hours
 
         const response = await fetch(
             `https://www.worldtides.info/api/v3?heights&lat=${LAT}&lon=${LON}&start=${nowUnix}&end=${endUnix}&key=${API_KEY}`
         );
+
+        if (!response.ok) {
+            return res.status(500).json({ error: "Failed to fetch WorldTides data" });
+        }
+
         const data = await response.json();
         const heights = data.heights;
         const now = Date.now() / 1000;
 
-        // Find closest points
+        // Find closest two points for interpolation
         let prevPoint, nextPoint;
         for (let i = 1; i < heights.length; i++) {
             if (heights[i].dt > now) {
@@ -27,7 +37,10 @@ export default async function handler(req, res) {
                 break;
             }
         }
-        if (!prevPoint || !nextPoint) return res.status(500).json({ error: "No data" });
+
+        if (!prevPoint || !nextPoint) {
+            return res.status(500).json({ error: "No tide data available" });
+        }
 
         const currentHeight = interpolateHeight(prevPoint, nextPoint, now);
         const trend = nextPoint.height > prevPoint.height ? "rising" : "falling";
@@ -56,10 +69,12 @@ export default async function handler(req, res) {
         });
 
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: err.message });
     }
-}
+};
 
+// Helper functions
 function interpolateHeight(prev, next, time) {
     const ratio = (time - prev.dt) / (next.dt - prev.dt);
     return prev.height + ratio * (next.height - prev.height);
