@@ -1,0 +1,59 @@
+/* style.css - Guernsey Tide Monitor */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #0b2e4a;  /* deep blue background for water theme */
+    color: white;
+    margin: 0;
+    padding: 60px 20px;
+}
+
+h1 {
+    font-size: 2.5em;
+    margin-bottom: 30px;
+}
+
+.medium {
+    font-size: 1.5em;
+    margin: 15px 0;
+}
+
+.big {
+    font-size: 3em;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+/* Countdown box */
+#countdown {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px 30px;
+    border-radius: 20px;
+    display: inline-block;
+    min-width: 250px;
+}
+
+/* Responsive for small screens */
+@media (max-width: 600px) {
+    h1 {
+        font-size: 2em;
+    }
+    .medium {
+        font-size: 1.2em;
+    }
+    .big {
+        font-size: 2.5em;
+    }
+    #countdown {
+        padding: 15px 20px;
+        min-width: 200px;
+    }
+}
+
+/* Optional: color-coded trend */
+#trend.rising {
+    color: #00ff99; /* green for rising tide */
+}
+#trend.falling {
+    color: #ff6666; /* red for falling tide */
+}
